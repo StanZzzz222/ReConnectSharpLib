@@ -1,3 +1,3 @@
-##ReConnectCSharpLib
+ReConnectCSharpLib
 
-####Open source CSharp Reconnect connection library
+Open source CSharp Reconnect connection library
