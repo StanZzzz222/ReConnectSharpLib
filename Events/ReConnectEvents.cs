@@ -67,12 +67,12 @@ namespace LibReConnect.Events
                                         Regex floatNumRex = new(@"^(\-)?\d+(\.\d{1,12})$");
                                         if (numberRex.IsMatch(obj))
                                         {
-                                            args[i] = Convert.ToInt32(obj);
+                                            args[i] = Convert.ToInt64(obj);
                                             continue;
                                         }
                                         if (floatNumRex.IsMatch(obj))
                                         {
-                                            args[i] = Convert.ToSingle(obj);
+                                            args[i] = Convert.ToDouble(obj);
                                             continue;
                                         }
                                         if (String.Equals(obj.ToLower(), "true") || String.Equals(obj.ToLower(), "false"))
@@ -86,7 +86,6 @@ namespace LibReConnect.Events
                                     Object resObj = methodData.MethodInfo.Invoke(obj1, eventArgsLen <= 0 ? null : args);
                                     if (resObj == null) LibInstance.SetEmitResponse(eventId, "");
                                     if (resObj != null) LibInstance.SetEmitResponse(eventId, JsonSerializer.Serialize(resObj));
-                                    break;
                                 }
                             }
                             continue;
