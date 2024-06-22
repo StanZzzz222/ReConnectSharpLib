@@ -41,54 +41,48 @@ namespace LibReConnect.Events
                     String data = LibInstance.GetEmitEventsReConnect();
                     String eventId = LibInstance.SearchReConnect(data, "id");
                     String eventName = LibInstance.SearchReConnect(data, "name");
-                    switch (eventName)
+                    String eventArgs = LibInstance.SearchReConnect(data, "data");
+                    foreach (MethodData methodData in methodDatas)
                     {
-                        // 默认处理
-                        default:
-                            String eventArgs = LibInstance.SearchReConnect(data, "data");
-                            foreach (MethodData methodData in methodDatas)
+                        ReConnectEmitEvent objEvent = (ReConnectEmitEvent)methodData.MethodInfo.GetCustomAttribute(typeof(ReConnectEmitEvent));
+                        if (objEvent == null) continue;
+                        if (objEvent.EventName.Equals(eventName))
+                        {
+                            int objEventParamLen = methodData.MethodInfo.GetParameters().Length;
+                            int eventArgsLen = Convert.ToInt32(LibInstance.SearchReConnect(data, "data.#"));
+                            if (objEventParamLen < eventArgsLen || objEventParamLen > eventArgsLen)
                             {
-                                ReConnectEmitEvent objEvent = (ReConnectEmitEvent)methodData.MethodInfo.GetCustomAttribute(typeof(ReConnectEmitEvent));
-                                if (objEvent == null) continue;
-                                if (objEvent.EventName.Equals(eventName))
-                                {
-                                    int objEventParamLen = methodData.MethodInfo.GetParameters().Length;
-                                    int eventArgsLen = Convert.ToInt32(LibInstance.SearchReConnect(data, "data.#"));
-                                    if (objEventParamLen < eventArgsLen || objEventParamLen > eventArgsLen)
-                                    {
-                                        Logger.Logger.Error($"{eventName} 通知失败, 原因: 缺少入参或含有多余参数");
-                                        continue;
-                                    }
-                                    Object[] args = new Object[eventArgsLen];
-                                    for (int i = 0; i < eventArgsLen; i++)
-                                    {
-                                        String obj = Convert.ToString(LibInstance.SearchReConnect(data, $"data.{i}"));
-                                        Regex numberRex = new(@"^(0|[1-9][0-9]*|-[1-9][0-9]*)$");
-                                        Regex floatNumRex = new(@"^(\-)?\d+(\.\d{1,12})$");
-                                        if (numberRex.IsMatch(obj))
-                                        {
-                                            args[i] = Convert.ToInt64(obj);
-                                            continue;
-                                        }
-                                        if (floatNumRex.IsMatch(obj))
-                                        {
-                                            args[i] = Convert.ToDouble(obj);
-                                            continue;
-                                        }
-                                        if (String.Equals(obj.ToLower(), "true") || String.Equals(obj.ToLower(), "false"))
-                                        {
-                                            args[i] = Convert.ToBoolean(obj);
-                                            continue;
-                                        }
-                                        args[i] = obj;
-                                    }
-                                    Object obj1 = Activator.CreateInstance(methodData.Type);
-                                    Object resObj = methodData.MethodInfo.Invoke(obj1, eventArgsLen <= 0 ? null : args);
-                                    if (resObj == null) LibInstance.SetEmitResponse(eventId, "");
-                                    if (resObj != null) LibInstance.SetEmitResponse(eventId, JsonSerializer.Serialize(resObj));
-                                }
+                                Logger.Logger.Error($"{eventName} 通知失败, 原因: 缺少入参或含有多余参数");
+                                continue;
                             }
-                            continue;
+                            Object[] args = new Object[eventArgsLen];
+                            for (int i = 0; i < eventArgsLen; i++)
+                            {
+                                String obj = Convert.ToString(LibInstance.SearchReConnect(data, $"data.{i}"));
+                                Regex numberRex = new(@"^(0|[1-9][0-9]*|-[1-9][0-9]*)$");
+                                Regex floatNumRex = new(@"^(\-)?\d+(\.\d{1,12})$");
+                                if (numberRex.IsMatch(obj))
+                                {
+                                    args[i] = Convert.ToInt64(obj);
+                                    continue;
+                                }
+                                if (floatNumRex.IsMatch(obj))
+                                {
+                                    args[i] = Convert.ToDouble(obj);
+                                    continue;
+                                }
+                                if (String.Equals(obj.ToLower(), "true") || String.Equals(obj.ToLower(), "false"))
+                                {
+                                    args[i] = Convert.ToBoolean(obj);
+                                    continue;
+                                }
+                                args[i] = obj;
+                            }
+                            Object obj1 = Activator.CreateInstance(methodData.Type);
+                            Object resObj = methodData.MethodInfo.Invoke(obj1, eventArgsLen <= 0 ? null : args);
+                            if (resObj == null) LibInstance.SetEmitResponse(eventId, "");
+                            if (resObj != null) LibInstance.SetEmitResponse(eventId, JsonSerializer.Serialize(resObj));
+                        }
                     }
                 }
             });
